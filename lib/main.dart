@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:day_craft/app_state.dart';
@@ -22,10 +23,16 @@ class TimeBlockApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: Colors.black,
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFF050505),
         primaryColor: const Color(0xFF5E5CE6),
         cardColor: const Color(0xFF1C1C1E),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5E5CE6),
+          brightness: Brightness.dark,
+        ),
       ),
       home: const MainNavigation(),
     );
@@ -58,26 +65,32 @@ class _MainNavigationState extends State<MainNavigation> {
             bottom: 30,
             left: 20,
             right: 20,
-            child: Container(
-              height: 65,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2C2C2E).withOpacity(0.95),
-                borderRadius: BorderRadius.circular(35),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2C2C2E).withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(35),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _navItem(0, Icons.dashboard_rounded),
-                  _navItem(1, Icons.copy_all_rounded),
-                  _navItem(2, Icons.calendar_month_rounded),
-                ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _navItem(0, Icons.dashboard_rounded),
+                      _navItem(1, Icons.copy_all_rounded),
+                      _navItem(2, Icons.calendar_month_rounded),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -86,7 +99,7 @@ class _MainNavigationState extends State<MainNavigation> {
               bottom: 105,
               right: 20,
               child: FloatingActionButton(
-                backgroundColor: const Color(0xFF5E5CE6),
+                backgroundColor: Theme.of(context).primaryColor,
                 shape: const CircleBorder(),
                 child: const Icon(Icons.add, color: Colors.white),
                 onPressed: () {
@@ -117,7 +130,9 @@ class _MainNavigationState extends State<MainNavigation> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5E5CE6) : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(

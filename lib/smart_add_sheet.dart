@@ -63,11 +63,12 @@ class _SmartAddSheetState extends State<SmartAddSheet> {
                     decoration: InputDecoration(
                       hintText: "Hledat nebo vytvořit...",
                       prefixIcon: const Icon(Icons.search),
+                      hintStyle: const TextStyle(color: Colors.white38),
                       filled: true,
-                      fillColor: Colors.white10,
+                      fillColor: Colors.white.withOpacity(0.08),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none, // Cleaner look
                       ),
                     ),
                   );
@@ -90,11 +91,11 @@ class _SmartAddSheetState extends State<SmartAddSheet> {
           const SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5E5CE6),
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              elevation: 0,
+              shape: const StadiumBorder(),
             ),
             onPressed: () {
               if (_title.isEmpty) return;
@@ -132,13 +133,13 @@ class _SmartAddSheetState extends State<SmartAddSheet> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white24),
+          color: Colors.white.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.1)),
         ),
         child: Row(
           children: [
-            Text("$label: ", style: const TextStyle(color: Colors.grey)),
+            Text("$label: ", style: const TextStyle(color: Colors.white60)),
             Text(
               time.format(context),
               style: const TextStyle(fontWeight: FontWeight.bold),

@@ -55,10 +55,21 @@ class _DraggableTimelineBlockState extends State<DraggableTimelineBlock> {
               width: double.infinity,
               height: double.infinity,
               decoration: BoxDecoration(
-                color: widget.block.color.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(8),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    widget.block.color.withOpacity(0.9),
+                    widget.block.color.withOpacity(0.6),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.15),
+                  width: 1,
+                ),
                 boxShadow: [
-                  if (_dragDy != null)
+                  if (_dragDy != null || _resizeDy != null)
                     BoxShadow(
                       color: Colors.black.withOpacity(0.5),
                       blurRadius: 10,
@@ -66,7 +77,7 @@ class _DraggableTimelineBlockState extends State<DraggableTimelineBlock> {
                     ),
                 ],
               ),
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -74,13 +85,14 @@ class _DraggableTimelineBlockState extends State<DraggableTimelineBlock> {
                     widget.block.title,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 13,
+                      color: Colors.white,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     "${widget.block.start.format(context)} - ${widget.block.end.format(context)}",
-                    style: const TextStyle(fontSize: 10, color: Colors.white70),
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
                   ),
                 ],
               ),
@@ -104,11 +116,11 @@ class _DraggableTimelineBlockState extends State<DraggableTimelineBlock> {
                 decoration: const BoxDecoration(color: Colors.transparent),
                 child: Center(
                   child: Container(
-                    width: 30,
+                    width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.white38,
-                      borderRadius: BorderRadius.circular(2),
+                      color: Colors.white.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),

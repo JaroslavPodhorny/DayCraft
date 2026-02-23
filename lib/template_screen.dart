@@ -47,7 +47,7 @@ class TemplateScreen extends StatelessWidget {
                 ),
               ),
               subtitle: Text(
-                "${template.blocks.length} bloků",
+                "${template.blocks.length} blok",
                 style: const TextStyle(color: Colors.grey),
               ),
               trailing: IconButton(
@@ -57,13 +57,15 @@ class TemplateScreen extends StatelessWidget {
                 icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
                 onPressed: () {
                   context.read<AppState>().applyTemplate(
-                    DateTime.now(),
+                    null, // Let AppState handle the date (defaults to today)
                     template,
                   );
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Použita šablona ${template.name}")),
                   );
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
                 },
               ),
             ),

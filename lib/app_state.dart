@@ -92,11 +92,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void applyTemplate(DateTime date, TimeBlockTemplate template) {
-    String key = DateFormat('yyyy-MM-dd').format(date);
-    List<TimeBlock> newBlocks = template.blocks.map((b) {
+  void applyTemplate(DateTime? date, TimeBlockTemplate template) {
+    final dateToUse = date ?? DateTime.now();
+    String key = DateFormat('yyyy-MM-dd').format(dateToUse);
+    final int now = DateTime.now().microsecondsSinceEpoch;
+    List<TimeBlock> newBlocks = template.blocks.asMap().entries.map((entry) {
+      final int index = entry.key;
+      final TimeBlock b = entry.value;
       return TimeBlock(
-        id: DateTime.now().microsecondsSinceEpoch.toString() + b.title,
+        id: '${now}_${index}_${b.title}',
         title: b.title,
         start: b.start,
         end: b.end,

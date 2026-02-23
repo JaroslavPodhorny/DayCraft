@@ -18,7 +18,7 @@ class TimelineScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 90,
@@ -90,25 +90,29 @@ class TimelineScreen extends StatelessWidget {
                   return Container(
                     height: hourHeight,
                     decoration: const BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(color: Colors.white10, width: 0.5),
-                      ),
+                      // Removed bottom border for cleaner look, using Divider below
                     ),
                     child: Row(
                       children: [
                         SizedBox(
-                          width: 50,
+                          width: 60,
                           child: Center(
                             child: Text(
                               "$index:00",
                               style: const TextStyle(
                                 color: Colors.grey,
-                                fontSize: 12,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
                         ),
-                        const VerticalDivider(color: Colors.white10, width: 1),
+                        Expanded(
+                          child: Divider(
+                            color: Colors.white.withOpacity(0.08),
+                            height: 1,
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -165,9 +169,17 @@ class TimelineScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
                 decoration: const InputDecoration(
                   hintText: "Název bloku",
+                  hintStyle: TextStyle(color: Colors.white38),
+                  filled: true,
+                  fillColor: Colors.white10,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   border: InputBorder.none,
                 ),
               ),
@@ -188,7 +200,7 @@ class TimelineScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextButton.icon(
-                      icon: const Icon(Icons.delete, color: Colors.red),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
                       label: const Text(
                         "Smazat blok",
                         style: TextStyle(color: Colors.red),
@@ -202,7 +214,9 @@ class TimelineScreen extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5E5CE6),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: const StadiumBorder(),
                       ),
                       child: const Text(
                         "Uložit",
