@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,8 +13,9 @@ class TimelineScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime today = DateTime.now();
-    var blocks = context.watch<AppState>().getBlocksForDate(today);
+    final appState = context.watch<AppState>();
+    final selectedDate = appState.selectedDate;
+    var blocks = appState.getBlocksForDate(selectedDate);
     const double hourHeight = 80.0;
 
     return Scaffold(
@@ -22,47 +24,80 @@ class TimelineScreen extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         toolbarHeight: 90,
-        title: Row(
-          children: [
-            Text(
-              DateFormat('d').format(today),
-              style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+        title: GestureDetector(
+          onTap: () async {
+            final DateTime? picked = await showDatePicker(
+              context: context,
+              initialDate: selectedDate,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: Theme.of(context).colorScheme.copyWith(
+                      primary: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (picked != null && picked != selectedDate) {
+              context.read<AppState>().updateSelectedDate(picked);
+            }
+          },
+          child: Row(
+            children: [
+              Text(
+                DateFormat('d').format(selectedDate),
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onBackground,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  DateFormat('MMMM', 'cs').format(today).toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                    letterSpacing: 1.2,
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    DateFormat('MMMM', 'cs').format(selectedDate).toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.secondary,
+                      letterSpacing: 1.2,
+                    ),
                   ),
-                ),
-                Text(
-                  DateFormat('EEEE', 'cs').format(today),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white70,
+                  Row(
+                    children: [
+                      Text(
+                        DateFormat('EEEE', 'cs').format(selectedDate),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onBackground,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 20),
+            padding: const EdgeInsets.only(right: 12),
             child: IconButton(
               style: IconButton.styleFrom(
-                backgroundColor: const Color(0xFF1C1C1E),
+                backgroundColor: Theme.of(context).cardColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -76,6 +111,21 @@ class TimelineScreen extends StatelessWidget {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).cardColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.all(12),
+              ),
+              icon: const Icon(Icons.save_alt_rounded, size: 22),
+              tooltip: "Uložit jako šablonu",
+              onPressed: () => _showSaveTemplateDialog(context, selectedDate),
+            ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -86,12 +136,11 @@ class TimelineScreen extends StatelessWidget {
           child: Stack(
             children: [
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: List.generate(24, (index) {
                   return Container(
                     height: hourHeight,
-                    decoration: const BoxDecoration(
-                      // Removed bottom border for cleaner look, using Divider below
-                    ),
+                    decoration: const BoxDecoration(),
                     child: Row(
                       children: [
                         SizedBox(
@@ -99,8 +148,8 @@ class TimelineScreen extends StatelessWidget {
                           child: Center(
                             child: Text(
                               "$index:00",
-                              style: const TextStyle(
-                                color: Colors.grey,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.secondary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -109,7 +158,7 @@ class TimelineScreen extends StatelessWidget {
                         ),
                         Expanded(
                           child: Divider(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Theme.of(context).dividerColor,
                             height: 1,
                           ),
                         ),
@@ -118,22 +167,65 @@ class TimelineScreen extends StatelessWidget {
                   );
                 }),
               ),
-
               ...blocks.map((block) {
                 return DraggableTimelineBlock(
                   key: ValueKey(block.id),
                   block: block,
                   hourHeight: hourHeight,
                   onUpdate: (updatedBlock) {
-                    context.read<AppState>().updateBlock(today, updatedBlock);
+                    context.read<AppState>().updateBlock(
+                      selectedDate,
+                      updatedBlock,
+                    );
                   },
-                  onTap: () => _showEditBlockSheet(context, today, block),
+                  onTap: () =>
+                      _showEditBlockSheet(context, selectedDate, block),
                 );
-              }).toList(),
+              }),
+              if (DateUtils.isSameDay(selectedDate, DateTime.now()))
+                CurrentTimeIndicator(hourHeight: hourHeight),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _showSaveTemplateDialog(BuildContext context, DateTime date) {
+    final TextEditingController nameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Uložit jako šablonu"),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(hintText: "Název šablony"),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Zrušit"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  context.read<AppState>().saveDayAsTemplate(
+                    date,
+                    nameController.text,
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Šablona uložena!")),
+                  );
+                }
+              },
+              child: const Text("Uložit"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -149,7 +241,7 @@ class TimelineScreen extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF1C1C1E),
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -166,24 +258,26 @@ class TimelineScreen extends StatelessWidget {
             children: [
               TextField(
                 controller: titleController,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onBackground,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: "Název bloku",
-                  hintStyle: TextStyle(color: Colors.white38),
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
                   filled: true,
-                  fillColor: Colors.white10,
-                  contentPadding: EdgeInsets.symmetric(
+                  fillColor: Theme.of(context).scaffoldBackgroundColor,
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   border: InputBorder.none,
                 ),
               ),
-              const Divider(color: Colors.white24),
+              Divider(color: Theme.of(context).dividerColor),
               const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -214,14 +308,26 @@ class TimelineScreen extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).cardColor,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onBackground,
                         shape: const StadiumBorder(),
                       ),
-                      child: const Text(
-                        "Uložit",
-                        style: TextStyle(color: Colors.white),
+                      child: const Text("Uložit jako blok"),
+                      onPressed: () {
+                        _saveBlockAsPreset(context, block);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        shape: const StadiumBorder(),
                       ),
+                      child: const Text("Uložit"),
                       onPressed: () {
                         context.read<AppState>().updateBlock(
                           date,
@@ -237,6 +343,48 @@ class TimelineScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _saveBlockAsPreset(BuildContext context, TimeBlock block) {
+    final TextEditingController nameController = TextEditingController(
+      text: block.title,
+    );
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Uložit jako znovupoužitelný blok"),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(hintText: "Název bloku"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Zrušit"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final duration = Duration(
+                minutes:
+                    (block.end.hour * 60 + block.end.minute) -
+                    (block.start.hour * 60 + block.start.minute),
+              );
+              context.read<AppState>().addBlockPreset(
+                BlockPreset(
+                  name: nameController.text,
+                  color: block.color,
+                  duration: duration,
+                ),
+              );
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close sheet
+            },
+            child: const Text("Uložit"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -261,8 +409,63 @@ class TimelineScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
-          border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+          border: isSelected
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  width: 3,
+                )
+              : null,
         ),
+      ),
+    );
+  }
+}
+
+class CurrentTimeIndicator extends StatefulWidget {
+  final double hourHeight;
+  const CurrentTimeIndicator({super.key, required this.hourHeight});
+
+  @override
+  State<CurrentTimeIndicator> createState() => _CurrentTimeIndicatorState();
+}
+
+class _CurrentTimeIndicatorState extends State<CurrentTimeIndicator> {
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = TimeOfDay.now();
+    final top = (now.hour + now.minute / 60.0) * widget.hourHeight;
+
+    return Positioned(
+      top: top,
+      left: 0,
+      right: 0,
+      child: Row(
+        children: [
+          const SizedBox(width: 50),
+          const CircleAvatar(radius: 4, backgroundColor: Colors.redAccent),
+          Expanded(
+            child: Container(
+              height: 2,
+              color: Colors.redAccent.withOpacity(0.8),
+            ),
+          ),
+        ],
       ),
     );
   }

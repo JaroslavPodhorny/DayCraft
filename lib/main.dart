@@ -6,12 +6,18 @@ import 'package:day_craft/app_state.dart';
 import 'package:day_craft/smart_add_sheet.dart';
 import 'package:day_craft/timeline_screen.dart';
 import 'package:day_craft/template_screen.dart';
+import 'package:day_craft/settings_screen.dart';
+import 'package:day_craft/theme_provider.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('cs', null);
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppState()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
       child: const TimeBlockApp(),
     ),
   );
@@ -22,18 +28,41 @@ class TimeBlockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    final darkTheme = ThemeData.dark().copyWith(
+      scaffoldBackgroundColor: const Color(0xFF050505),
+      primaryColor: const Color(0xFF5E5CE6),
+      cardColor: const Color(0xFF1C1C1E),
+      dividerColor: Colors.white.withOpacity(0.1),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF5E5CE6),
+        brightness: Brightness.dark,
+        background: const Color(0xFF050505),
+        onBackground: Colors.white,
+        secondary: Colors.grey[400],
+      ),
+    );
+
+    final lightTheme = ThemeData.light().copyWith(
+      scaffoldBackgroundColor: const Color(0xFFF2F2F7),
+      primaryColor: const Color(0xFF5E5CE6),
+      cardColor: Colors.white,
+      dividerColor: Colors.black.withOpacity(0.08),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFF5E5CE6),
+        brightness: Brightness.light,
+        background: const Color(0xFFF2F2F7),
+        onBackground: Colors.black,
+        secondary: Colors.grey[600],
+      ),
+    );
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF050505),
-        primaryColor: const Color(0xFF5E5CE6),
-        cardColor: const Color(0xFF1C1C1E),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF5E5CE6),
-          brightness: Brightness.dark,
-        ),
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: themeProvider.themeMode,
       home: const MainNavigation(),
     );
   }
@@ -51,7 +80,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const TimelineScreen(),
     const TemplateScreen(),
-    const Center(child: Text("Kalendář (Již brzy)")),
+    const SettingsScreen(),
   ];
 
   @override
@@ -87,7 +116,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     children: [
                       _navItem(0, Icons.dashboard_rounded),
                       _navItem(1, Icons.copy_all_rounded),
-                      _navItem(2, Icons.calendar_month_rounded),
+                      _navItem(2, Icons.settings_rounded),
                     ],
                   ),
                 ),
@@ -103,6 +132,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 shape: const CircleBorder(),
                 child: const Icon(Icons.add, color: Colors.white),
                 onPressed: () {
+                  final selectedDate = context.read<AppState>().selectedDate;
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -112,7 +142,7 @@ class _MainNavigationState extends State<MainNavigation> {
                         top: Radius.circular(20),
                       ),
                     ),
-                    builder: (context) => SmartAddSheet(date: DateTime.now()),
+                    builder: (context) => SmartAddSheet(date: selectedDate),
                   );
                 },
               ),
