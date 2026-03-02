@@ -30,33 +30,38 @@ class TimeBlockApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    final darkTheme = ThemeData.dark().copyWith(
-      scaffoldBackgroundColor: const Color(0xFF050505),
-      primaryColor: const Color(0xFF5E5CE6),
-      cardColor: const Color(0xFF1C1C1E),
-      dividerColor: Colors.white.withOpacity(0.1),
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF5E5CE6),
-        brightness: Brightness.dark,
-        background: const Color(0xFF050505),
-        onBackground: Colors.white,
-        secondary: Colors.grey[400],
-      ),
-    );
+    ThemeData createTheme(Brightness brightness) {
+      final isDark = brightness == Brightness.dark;
+      final baseColor = const Color(0xFF5E5CE6);
+      final bgColor = isDark
+          ? const Color(0xFF050505)
+          : const Color(0xFFF2F2F7);
+      final cardColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+      final dividerColor = isDark
+          ? Colors.white.withOpacity(0.1)
+          : Colors.black.withOpacity(0.08);
+      final secondaryColor = isDark ? Colors.grey[400] : Colors.grey[600];
+      final onBgColor = isDark ? Colors.white : Colors.black;
 
-    final lightTheme = ThemeData.light().copyWith(
-      scaffoldBackgroundColor: const Color(0xFFF2F2F7),
-      primaryColor: const Color(0xFF5E5CE6),
-      cardColor: Colors.white,
-      dividerColor: Colors.black.withOpacity(0.08),
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF5E5CE6),
-        brightness: Brightness.light,
-        background: const Color(0xFFF2F2F7),
-        onBackground: Colors.black,
-        secondary: Colors.grey[600],
-      ),
-    );
+      return ThemeData(
+        useMaterial3: true,
+        brightness: brightness,
+        scaffoldBackgroundColor: bgColor,
+        primaryColor: baseColor,
+        cardColor: cardColor,
+        dividerColor: dividerColor,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: baseColor,
+          brightness: brightness,
+          surface: bgColor,
+          onSurface: onBgColor,
+          secondary: secondaryColor,
+        ),
+      );
+    }
+
+    final darkTheme = createTheme(Brightness.dark);
+    final lightTheme = createTheme(Brightness.light);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -77,7 +82,7 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
+  final List<Widget> _screens = const [
     const TimelineScreen(),
     const TemplateScreen(),
     const SettingsScreen(),
@@ -90,64 +95,69 @@ class _MainNavigationState extends State<MainNavigation> {
       body: Stack(
         children: [
           _screens[_currentIndex],
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: ClipRRect(
+          _buildBottomBar(),
+          if (_currentIndex == 0) _buildFab(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Positioned(
+      bottom: 30,
+      left: 20,
+      right: 20,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(35),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: 70,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C2C2E).withOpacity(0.8),
               borderRadius: BorderRadius.circular(35),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2C2C2E).withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(35),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _navItem(0, Icons.dashboard_rounded),
-                      _navItem(1, Icons.copy_all_rounded),
-                      _navItem(2, Icons.settings_rounded),
-                    ],
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-              ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _navItem(0, Icons.dashboard_rounded),
+                _navItem(1, Icons.copy_all_rounded),
+                _navItem(2, Icons.settings_rounded),
+              ],
             ),
           ),
-          if (_currentIndex == 0)
-            Positioned(
-              bottom: 105,
-              right: 20,
-              child: FloatingActionButton(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: const CircleBorder(),
-                child: const Icon(Icons.add, color: Colors.white),
-                onPressed: () {
-                  final selectedDate = context.read<AppState>().selectedDate;
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: const Color(0xFF1C1C1E),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
-                    ),
-                    builder: (context) => SmartAddSheet(date: selectedDate),
-                  );
-                },
-              ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFab(BuildContext context) {
+    return Positioned(
+      bottom: 105,
+      right: 20,
+      child: FloatingActionButton(
+        backgroundColor: Theme.of(context).primaryColor,
+        shape: const CircleBorder(),
+        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () {
+          final selectedDate = context.read<AppState>().selectedDate;
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: const Color(0xFF1C1C1E),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-        ],
+            builder: (context) => SmartAddSheet(date: selectedDate),
+          );
+        },
       ),
     );
   }
